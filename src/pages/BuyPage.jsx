@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CategoryButton from '../components/CategoryButton';
 import ProductCard from '../components/ProductCard';
 import Cart from './cart.jsx';
@@ -7,6 +7,7 @@ import { GiMeatCleaver, GiMilkCarton, GiManualMeatGrinder } from "react-icons/gi
 import { CiSearch } from "react-icons/ci";
 
 function BuyPage() {
+  const [products, setProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortOption, setSortOption] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,34 +15,28 @@ function BuyPage() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
-  const products = [
-    { image: "egg.jpeg", name: "Egg", price: 10, category: "Poultry & Meat", quantity: 4 },
-    { image: "milk.jpeg", name: "Milk", price: 20, category: "Dairy & Beverages", quantity: 4 },
-    { image: "Homemade chocolates.webp", name: "Chocolates", price: 250, category: "Bakery & Snacks", quantity: 7 },
-    { image: "chicken.jpeg", name: "Chicken", price: 250, category: "Poultry & Meat", quantity: 3 },
-    { image: "buns.webp", name: "Bun", price: 30, category: "Bakery & Snacks", quantity: 5 },
-    { image: "Butter Buns.jpg", name: "Butter Bun", price: 50, category: "Bakery & Snacks", quantity: 1 },
-    { image: "Coconut oil.jpeg", name: "Coconut Oil", price: 250, category: "Homemade Essentials", quantity: 2 },
-    { image: "cream cakes.jpg", name: "Cream Cake", price: 400, category: "Bakery & Snacks", quantity: 4 },
-    { image: "jam.jpg", name: "Jam", price: 350, category: "Homemade Essentials", quantity: 4 },
-    { image: "soap.jpeg", name: "Soap", price: 250, category: "Homemade Essentials", quantity: 4 },
-    { image: "Cookies.jpeg", name: "Cookies", price: 250, category: "Bakery & Snacks", quantity: 4 },
-    { image: "coconut.jpeg", name: "Coconut", price: 250, category: "Homemade Essentials", quantity: 4 },
-    { image: "brinjal.jpeg", name: "Brinjal", price: 250, category: "Vegetables", quantity: 4 },
-    { image: "chilli.jpeg", name: "Chilli", price: 150, category: "Vegetables", quantity: 4 },
-    { image: "ladys finger.jpeg", name: "Lady's Finger", price: 200, category: "Vegetables", quantity: 4 },
-    { image: "tomato.jpeg", name: "Tomato", price: 500, category: "Vegetables", quantity: 4 },
-    { image: "pea.jpeg", name: "Pea", price: 250, category: "Vegetables", quantity: 4 },
-    { image: "mango.webp", name: "Mango", price: 800, category: "Fruits", quantity: 4 },
-    { image: "guava.jpeg", name: "Guava", price: 650, category: "Fruits", quantity: 4 },
-    { image: "dragon fruit.jpeg", name: "Dragon Fruit", price: 250, category: "Fruits", quantity: 4 }
-  ];
+  // 🔥 FETCH PRODUCTS FROM BACKEND
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
-  const handleAddToCart = (product) => {
-    setCartItems([...cartItems, product]);
-    console.log(`${product.quantity} × ${product.name} added to cart!`); // Replaced alert()
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/products");
+      const data = await res.json();
+      setProducts(data);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    }
   };
 
+  // ADD TO CART
+  const handleAddToCart = (product) => {
+    setCartItems([...cartItems, product]);
+    console.log(`${product.quantity} × ${product.name} added to cart`);
+  };
+
+  // CATEGORY ICONS
   const getCategoryIcon = (category) => {
     switch (category) {
       case "Poultry & Meat":
@@ -61,9 +56,9 @@ function BuyPage() {
     }
   };
 
-  // Update categoryButtonStyle to match header
+  // STYLES
   const categoryButtonStyle = {
-    backgroundColor: '#1a3c22ff', // dark green
+    backgroundColor: '#1a3c22ff',
     color: '#fff',
     padding: '10px 20px',
     borderRadius: '24px',
@@ -74,65 +69,27 @@ function BuyPage() {
     fontFamily: '"Lato", sans-serif',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    boxShadow: '0 2px 8px rgba(26, 60, 52, 0.08)'
-  };
-
-  const handleCartClick = () => setIsCartOpen(true);
-  const handleCartClose = () => setIsCartOpen(false);
-  const handleProceedToPayment = (amount) => {
-    alert(`Proceeding to payment of ₹${amount}`);
-    setIsCartOpen(false);
+    gap: '8px'
   };
 
   return (
     <div>
-      {/* <Header onCartClick={handleCartClick} cartItemCount={cartItems.length} />
-      <Cart
-        isOpen={isCartOpen}
-        onClose={handleCartClose}
-        onProceedToPayment={handleProceedToPayment}
-      /> */}
-
       <div style={{ padding: '32px 0', maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Search and Sort section */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          marginBottom: '32px',
-          width: '100%'
-        }}>
+
+        {/* SEARCH + SORT */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
           <div style={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             width: '80%',
-            maxWidth: '800px',
-            gap: '0px',
-            background: '#f7f7f7', // very light grey background
-            borderRadius: '32px',   // large curve for pill shape
-            padding: '0 0 0 0',
-            boxShadow: '0 2px 8px rgba(26, 60, 52, 0.04)'
+            background: '#f7f7f7',
+            borderRadius: '32px'
           }}>
-            {/* Search Input */}
-            <div style={{
-              position: 'relative',
-              flexGrow: 1,
-              display: 'flex',
-              alignItems: 'center',
-              background: 'transparent',
-              borderRadius: '32px 0 0 32px',
-              overflow: 'hidden'
-            }}>
+            <div style={{ position: 'relative', flexGrow: 1 }}>
               <span style={{
                 position: 'absolute',
-                left: '22px',
+                left: '20px',
                 top: '50%',
-                transform: 'translateY(-50%)',
-                fontSize: '22px',
-                color: '#204229'
+                transform: 'translateY(-50%)'
               }}>
                 <CiSearch />
               </span>
@@ -142,116 +99,39 @@ function BuyPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
-                  padding: '18px 18px 18px 54px',
+                  padding: '16px 16px 16px 50px',
                   width: '100%',
                   border: 'none',
                   outline: 'none',
-                  fontSize: '18px',
-                  fontFamily: '"Lato", sans-serif',
-                  background: 'transparent',
-                  color: '#204229',
-                  borderRadius: '32px 0 0 32px'
+                  background: 'transparent'
                 }}
               />
             </div>
-            {/* Custom Sort Dropdown */}
-            <div style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              background: '#fff',
-              borderRadius: '0 32px 32px 0',
-              padding: '0 32px',
-              borderLeft: '1px solid #eee',
-              height: '56px',
-              cursor: 'pointer'
-            }}>
-              <div
-                style={{
-                  color: '#204229',
-                  fontWeight: 'bold',
-                  fontFamily: '"Lato", sans-serif',
-                  fontSize: '18px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-              >
-                Sort
-                <span style={{
-                  fontSize: '18px',
-                  color: '#204229'
-                }}>▼</span>
-              </div>
-              {sortDropdownOpen && (
-                <div style={{
-                  position: 'absolute',
-                  top: '60px',
-                  right: '0',
-                  background: '#fff',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-                  borderRadius: '16px',
-                  zIndex: 10,
-                  minWidth: '180px',
-                  padding: '8px 0'
-                }}>
-                  <div
-                    style={{
-                      padding: '12px 24px',
-                      cursor: 'pointer',
-                      color: '#204229',
-                      fontFamily: '"Lato", sans-serif',
-                      fontSize: '16px',
-                      fontWeight: sortOption === 'priceLowHigh' ? 'bold' : 'normal',
-                      background: sortOption === 'priceLowHigh' ? '#f7f7f7' : 'transparent'
-                    }}
-                    onClick={() => { setSortOption('priceLowHigh'); setSortDropdownOpen(false); }}
-                  >
-                    Price: Low to High
-                  </div>
-                  <div
-                    style={{
-                      padding: '12px 24px',
-                      cursor: 'pointer',
-                      color: '#204229',
-                      fontFamily: '"Lato", sans-serif',
-                      fontSize: '16px',
-                      fontWeight: sortOption === 'priceHighLow' ? 'bold' : 'normal',
-                      background: sortOption === 'priceHighLow' ? '#f7f7f7' : 'transparent'
-                    }}
-                    onClick={() => { setSortOption('priceHighLow'); setSortDropdownOpen(false); }}
-                  >
-                    Price: High to Low
-                  </div>
-                  <div
-                    style={{
-                      padding: '12px 24px',
-                      cursor: 'pointer',
-                      color: '#204229',
-                      fontFamily: '"Lato", sans-serif',
-                      fontSize: '16px',
-                      fontWeight: sortOption === 'nameAZ' ? 'bold' : 'normal',
-                      background: sortOption === 'nameAZ' ? '#f7f7f7' : 'transparent'
-                    }}
-                    onClick={() => { setSortOption('nameAZ'); setSortDropdownOpen(false); }}
-                  >
-                    Name: A to Z
-                  </div>
-                </div>
-              )}
+
+            <div
+              onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+              style={{
+                padding: '16px 24px',
+                cursor: 'pointer',
+                borderLeft: '1px solid #ddd'
+              }}
+            >
+              Sort ▼
             </div>
           </div>
         </div>
 
-        {/* Category Filter */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '10px',
-          marginBottom: '32px',
-          justifyContent: 'center'
-        }}>
+        {/* SORT OPTIONS */}
+        {sortDropdownOpen && (
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <button onClick={() => setSortOption('priceLowHigh')}>Price Low → High</button>
+            <button onClick={() => setSortOption('priceHighLow')}>Price High → Low</button>
+            <button onClick={() => setSortOption('nameAZ')}>Name A → Z</button>
+          </div>
+        )}
+
+        {/* CATEGORY FILTER */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginBottom: '32px' }}>
           {["All", "Poultry & Meat", "Vegetables", "Fruits", "Dairy & Beverages", "Bakery & Snacks", "Homemade Essentials"].map(category => (
             <button
               key={category}
@@ -259,8 +139,7 @@ function BuyPage() {
               style={{
                 ...categoryButtonStyle,
                 backgroundColor: selectedCategory === category ? '#63c959' : '#1a3c34',
-                color: selectedCategory === category ? '#1a3c34' : '#fff',
-                boxShadow: selectedCategory === category ? '0 4px 12px rgba(99, 201, 89, 0.15)' : '0 2px 8px rgba(26, 60, 52, 0.08)'
+                color: selectedCategory === category ? '#1a3c34' : '#fff'
               }}
             >
               {getCategoryIcon(category)}
@@ -269,12 +148,11 @@ function BuyPage() {
           ))}
         </div>
 
-        {/* Product Grid */}
+        {/* PRODUCT GRID */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '32px',
-          justifyContent: 'center'
+          gap: '32px'
         }}>
           {products
             .filter(item =>
@@ -287,17 +165,20 @@ function BuyPage() {
               if (sortOption === 'nameAZ') return a.name.localeCompare(b.name);
               return 0;
             })
-            .map((item, index) => (
+            .map((item) => (
               <ProductCard
-                key={index}
-                image={item.image}
+                key={item._id}
+                image={item.image}     // ✅ Base64 image from MongoDB
                 name={item.name}
                 price={item.price}
                 stock={item.quantity}
-                onAddToCart={(qty) => handleAddToCart({ ...item, quantity: qty })}
+                onAddToCart={(qty) =>
+                  handleAddToCart({ ...item, quantity: qty })
+                }
               />
             ))}
         </div>
+
       </div>
     </div>
   );
