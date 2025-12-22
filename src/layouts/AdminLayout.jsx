@@ -17,27 +17,29 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState('');
 
+  // Handle search form submit
   const handleSearchSubmit = (e) => {
     e?.preventDefault?.();
-    const q = (searchValue || '').trim();
-    if (!q) return;
-    const l = q.toLowerCase();
+    const query = (searchValue || '').trim();
+    if (!query) return;
 
-    // simple routing heuristics
-    if (l.includes('product') || l.startsWith('p:') || /sku|item|price|category/.test(l)) {
-      navigate(`/admin/products?q=${encodeURIComponent(q)}`);
-    } else if (l.includes('order') || l.startsWith('o:') || /invoice|order#|trx|buyer|seller/.test(l)) {
-      navigate(`/admin/orders?q=${encodeURIComponent(q)}`);
-    } else if (l.includes('user') || l.includes('buyer') || l.includes('seller')) {
-      navigate(`/admin/users?q=${encodeURIComponent(q)}`);
-    } else if (l.includes('payout') || l.includes('pay')) {
-      navigate(`/admin/payouts?q=${encodeURIComponent(q)}`);
+    const lowerQuery = query.toLowerCase();
+
+    // Simple routing heuristics
+    if (lowerQuery.includes('product') || lowerQuery.startsWith('p:') || /sku|item|price|category/.test(lowerQuery)) {
+      navigate(`/admin/products?q=${encodeURIComponent(query)}`);
+    } else if (lowerQuery.includes('order') || lowerQuery.startsWith('o:') || /invoice|order#|trx|buyer|seller/.test(lowerQuery)) {
+      navigate(`/admin/orders?q=${encodeURIComponent(query)}`);
+    } else if (lowerQuery.includes('user') || lowerQuery.includes('buyer') || lowerQuery.includes('seller')) {
+      navigate(`/admin/users?q=${encodeURIComponent(query)}`);
+    } else if (lowerQuery.includes('payout') || lowerQuery.includes('pay')) {
+      navigate(`/admin/payouts?q=${encodeURIComponent(query)}`);
     } else {
-      // fallback to dashboard (showing results there)
-      navigate(`/admin/dashboard?q=${encodeURIComponent(q)}`);
+      navigate(`/admin/dashboard?q=${encodeURIComponent(query)}`);
     }
   };
 
+  // Sidebar menu items
   const menuItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <FaThLarge /> },
     { name: 'Products', path: '/admin/products', icon: <FaBoxOpen /> },
@@ -48,29 +50,25 @@ const AdminLayout = () => {
 
   return (
     <div className="admin-container">
-      
-      {/* 1. TOP NAVBAR (Full Width) */}
+      {/* TOP NAVBAR */}
       <header className="top-navbar">
-        
-        {/* Left: LOGO */}
+        {/* Logo */}
         <div className="navbar-brand">
           <img src={logoImg} alt="Gramika" className="navbar-logo" />
         </div>
 
-        {/* Right: Search & Profile */}
+        {/* Search + Profile */}
         <div className="nav-right">
-          <div className="search-box">
+          <form onSubmit={handleSearchSubmit} className="search-box">
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Search..."
+            />
             <FaSearch className="search-icon" onClick={handleSearchSubmit} />
-            <form onSubmit={handleSearchSubmit} style={{ display: 'inline' }}>
-              <input
-                type="text"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="Search..."
-              />
-            </form>
-          </div>
-          
+          </form>
+
           <div className="profile-section">
             <span className="admin-name">Anu Thomson</span>
             <Link to="/admin/settings" className="profile-icon-link">
@@ -80,10 +78,9 @@ const AdminLayout = () => {
         </div>
       </header>
 
-      {/* 2. BODY LAYOUT (Sidebar + Content) */}
+      {/* BODY LAYOUT: Sidebar + Content */}
       <div className="layout-body">
-        
-        {/* SIDEBAR (Starts below header) */}
+        {/* SIDEBAR */}
         <aside className="admin-sidebar">
           <nav className="sidebar-nav">
             {menuItems.map((item) => (
@@ -114,7 +111,6 @@ const AdminLayout = () => {
           <Outlet />
         </main>
       </div>
-
     </div>
   );
 };

@@ -1,9 +1,10 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+
+// Layouts
 import UserLayout from "./layouts/UserLayout.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
-import 'bootstrap/dist/css/bootstrap.min.css';
-
 
 // User-side pages
 import Home from "./pages/Home.jsx";
@@ -12,6 +13,7 @@ import ProfilePage from "./pages/Profile.jsx";
 import MyShop from "./pages/Myshop.jsx";
 import Cart from "./pages/cart.jsx";
 import Login from "./pages/Login.jsx";
+import Checkout from "./pages/Checkout.jsx";
 
 // Admin-side pages
 import Dashboard from "./pages/admin/Dashboard.jsx";
@@ -21,7 +23,7 @@ import Users from "./pages/admin/Users.jsx";
 import Payouts from "./pages/admin/Payouts.jsx";
 import Settings from "./pages/admin/Settings.jsx";
 
-// Route Guards (optional)
+// Route Guards
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import AdminRoute from "./routes/AdminRoute.jsx";
 
@@ -29,13 +31,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Login route outside UserLayout so header won't appear */}
+        {/* Login (no layout) */}
         <Route path="/login" element={<Login />} />
 
         {/* User Layout */}
         <Route element={<UserLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<BuyPage />} />
+
           <Route
             path="/profile"
             element={
@@ -44,11 +47,13 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route path="/my-shop" element={<MyShop />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
         </Route>
 
-        {/* Admin routes */}
+        {/* Admin Layout */}
         <Route
           path="/admin"
           element={

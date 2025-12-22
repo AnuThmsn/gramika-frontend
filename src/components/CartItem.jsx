@@ -1,23 +1,20 @@
-// src/components/CartItem.js
 import React from 'react';
-import '../styles/Cart.css'; // Import cart specific styles
 
 const CartItem = ({ item, onUpdateQuantity }) => {
-    return (
-        <div className="cart-item">
-            <img src={item.image} alt={item.name} />
-            <div className="item-details">
-                <p className="item-name">{item.name}</p>
-                <p className="item-volume">{item.volume}</p>
-                <p className="item-price">₹{item.price}</p>
-            </div>
-            <div className="quantity-controls">
-                <button onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}>-</button>
-                <span className="quantity-value">{item.quantity}</span>
-                <button onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}>+</button>
-            </div>
-        </div>
-    );
+  if (!item) return null; // Safety check
+
+  const handleChange = (e) => {
+    const newQty = parseInt(e.target.value, 10) || 0;
+    onUpdateQuantity(item.id, newQty);
+  };
+
+  return (
+    <div className="cart-item">
+      <p>{item.name}</p>
+      <input type="number" min="1" value={item.quantity} onChange={handleChange} />
+      <span>₹{item.price * item.quantity}</span>
+    </div>
+  );
 };
 
 export default CartItem;
