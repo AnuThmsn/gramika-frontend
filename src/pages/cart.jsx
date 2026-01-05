@@ -1,95 +1,69 @@
-import React, { useEffect } from 'react';
-import CartItem from '../components/CartItem.jsx';
-import '../styles/Cart.css';
-import { BsClock } from 'react-icons/bs';
-import { useTranslation } from 'react-i18next';
-import '../i18n'; // Make sure i18n is imported once
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // navigate to checkout
+import CartItem from "../components/CartItem";
+import "../styles/Cart.css";
 
-const Cart = ({
-  isOpen,
-  onClose,
-  onProceedToPayment,
-  cartItems = [],
-  onUpdateQuantity = () => {}
-}) => {
-  const { t } = useTranslation();
+const Cart = ({ isOpen, onClose, cartItems = [], onUpdateQuantity }) => {
+  const navigate = useNavigate();
 
-  const itemsTotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
-  const deliveryCharge = 25;
-  const handlingCharge = 2;
+  // Totals
+  const itemsTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const deliveryCharge = 0;
+  const handlingCharge = 0;
   const grandTotal = itemsTotal + deliveryCharge + handlingCharge;
-  const shipmentItemCount = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
+  // Disable body scroll when cart is open
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
+    document.body.style.overflow = isOpen ? "hidden" : "auto";
   }, [isOpen]);
 
-  const handleProceedClick = () => {
-    onProceedToPayment(grandTotal);
-  };
-
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
+  // Navigate to Checkout with cart data
+  const handleProceedToCheckout = () => {
+    if (cartItems.length === 0) {
+      alert("Your cart is empty!");
+      return;
+    }
+    onClose(); // close cart sidebar
+    navigate("/checkout", { state: { cartItems, grandTotal } }); // pass cart data
   };
 
   return (
     <>
       {/* Overlay */}
-      <div
-        className={`cart-overlay ${isOpen ? 'open' : ''}`}
-        onClick={handleBackdropClick}
-        aria-hidden={!isOpen}
-      ></div>
+      <div className={`cart-overlay ${isOpen ? "open" : ""}`} onClick={onClose} />
 
       {/* Sidebar */}
-      <div className={`cart-sidebar ${isOpen ? 'open' : ''}`} role="dialog" aria-hidden={!isOpen}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <h3 style={{ margin: 0, color: '#204229' }}>{t('your_cart')}</h3>
-          <button
-            aria-label="Close cart"
-            style={{ background: 'transparent', border: 'none', color: '#204229', fontSize: 18, cursor: 'pointer', fontWeight: 700 }}
-            onClick={onClose}
-          >
-            ✕
-          </button>
+      <div className={`cart-sidebar ${isOpen ? "open" : ""}`}>
+        {/* Header */}
+        <div className="cart-header">
+          <h3>Your Cart</h3>
+          <button onClick={onClose} className="close-btn">✕</button>
         </div>
 
-        {/* Delivery info */}
-        <div className="delivery-info">
-          <p><BsClock className="icon" /> {t('delivery_in')}</p>
-          <p>{t('shipment_of', { count: shipmentItemCount })}</p>
-        </div>
-
-        {/* Cart items */}
+        {/* Cart Items */}
         <div className="cart-items">
           {cartItems.length === 0 ? (
-            <p>{t('cart_empty')}</p>
+            <p className="empty-cart">Your cart is empty</p>
           ) : (
             cartItems.map(item => (
-              <CartItem key={item.id} item={item} onUpdateQuantity={onUpdateQuantity} />
+              <CartItem key={item._id} item={item} onUpdateQuantity={onUpdateQuantity} />
             ))
           )}
         </div>
 
-        {/* Bill details */}
+        {/* Bill Details */}
         <div className="bill-details">
-          <p>{t('items_total')} <span>₹{itemsTotal}</span></p>
-          <p>{t('delivery_charge')} <span>₹{deliveryCharge}</span></p>
-          <p>{t('handling_charge')} <span>₹{handlingCharge}</span></p>
-          <p className="grand-total">{t('grand_total')} <span>₹{grandTotal}</span></p>
-        </div>
-
-        {/* Cancellation */}
-        <div className="cancellation-policy">
-          <p><strong>{t('cancellation_policy')}</strong></p>
-          <p>{t('cancellation_text')}</p>
+          <p>Items Total <span>₹{itemsTotal}</span></p>
+          <p>Delivery Charge <span>₹{deliveryCharge}</span></p>
+          <p>Handling Charge <span>₹{handlingCharge}</span></p>
+          <p className="grand-total">Grand Total <span>₹{grandTotal}</span></p>
         </div>
 
         {/* Footer */}
         <div className="cart-footer">
-          <span className="total-amount">₹{grandTotal} {t('total')}</span>
-          <button className="proceed-button" onClick={handleProceedClick}>
-            {t('proceed_checkout')}
+          <span className="total-amount">₹{grandTotal}</span>
+          <button className="proceed-button" onClick={handleProceedToCheckout}>
+            Proceed to Checkout
           </button>
         </div>
       </div>

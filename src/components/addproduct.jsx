@@ -5,12 +5,13 @@ const AddProduct = ({ onAddProduct, onClose }) => {
     name: "",
     price: "",
     quantity: "",
+    category: "",
     image: ""
   });
 
   const [loading, setLoading] = useState(false);
 
-  // Handle text inputs
+  // Handle text & select inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewProduct((prev) => ({ ...prev, [name]: value }));
@@ -30,7 +31,9 @@ const AddProduct = ({ onAddProduct, onClose }) => {
 
   // Submit product to backend
   const handleSubmit = async () => {
-    if (!newProduct.name || !newProduct.price || !newProduct.quantity || !newProduct.image) {
+    const { name, price, quantity, category, image } = newProduct;
+
+    if (!name || !price || !quantity || !category || !image) {
       alert("Please fill all fields");
       return;
     }
@@ -44,10 +47,11 @@ const AddProduct = ({ onAddProduct, onClose }) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          name: newProduct.name,
-          price: Number(newProduct.price),
-          quantity: Number(newProduct.quantity),
-          image: newProduct.image
+          name,
+          price: Number(price),
+          quantity: Number(quantity),
+          category,
+          image
         })
       });
 
@@ -57,7 +61,7 @@ const AddProduct = ({ onAddProduct, onClose }) => {
         throw new Error(data.message || "Failed to add product");
       }
 
-      // Update parent state (optional)
+      // Update parent state
       if (onAddProduct) {
         onAddProduct(data.product);
       }
@@ -69,6 +73,7 @@ const AddProduct = ({ onAddProduct, onClose }) => {
         name: "",
         price: "",
         quantity: "",
+        category: "",
         image: ""
       });
 
@@ -95,6 +100,23 @@ const AddProduct = ({ onAddProduct, onClose }) => {
             onChange={handleInputChange}
             placeholder="Enter product name"
           />
+        </div>
+
+        <div className="products-form-group">
+          <label>Category</label>
+          <select
+            name="category"
+            value={newProduct.category}
+            onChange={handleInputChange}
+          >
+            <option value="">Select category</option>
+            <option value="Vegetables">Vegetables</option>
+            <option value="Fruits">Fruits</option>
+            <option value="Poultry & Meat">Poultry & Meat</option>
+            <option value="Dairy & Beverages">Dairy & Beverages</option>
+            <option value="Bakery & Snacks">Bakery & Snacks</option>
+            <option value="Homemade Essentials">Homemade Essentials</option>
+          </select>
         </div>
 
         <div className="products-form-group">
@@ -153,4 +175,4 @@ const AddProduct = ({ onAddProduct, onClose }) => {
   );
 };
 
-export default AddProduct
+export default AddProduct;

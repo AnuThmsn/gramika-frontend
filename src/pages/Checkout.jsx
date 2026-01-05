@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const Checkout = ({ cartItems = [], grandTotal = 0, onConfirmOrder }) => {
+const Checkout = ({ onConfirmOrder }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get cart data passed from Cart page
+  const { cartItems = [], grandTotal = 0 } = location.state || {};
+
   const [billingDetails, setBillingDetails] = useState({
     name: '',
     email: '',
@@ -9,16 +16,61 @@ const Checkout = ({ cartItems = [], grandTotal = 0, onConfirmOrder }) => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [loading, setLoading] = useState(false);
 
+  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setBillingDetails({ ...billingDetails, [name]: value });
   };
 
-  const handleConfirm = () => {
-    onConfirmOrder({ billingDetails, paymentMethod, cartItems, grandTotal });
+  // Handle confirm order
+  const handleConfirm = async () => {
+    if (cartItems.length === 0) {
+      alert("Your cart is empty!");
+      navigate("/");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}` // if auth middleware used
+        },
+        body: JSON.stringify({
+          items: cartItems.map(i => ({
+            productId: i._id,
+            name: i.name,
+            price: i.price,
+            quantity: i.quantity
+          })),
+          billingDetails,
+          paymentMethod,
+          totalAmount: grandTotal
+        })
+      });
+
+      const data = await res.json();
+      setLoading(false);
+
+      if (res.ok) {
+        alert(data.message); // "Order placed successfully"
+        onConfirmOrder();    // clear cart
+        navigate("/");       // redirect home
+      } else {
+        alert(data.message || "Something went wrong");
+      }
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+      alert("Server error, please try again");
+    }
   };
 
+  // Styles
   const containerStyle = {
     maxWidth: 600,
     margin: '40px auto',
@@ -31,28 +83,9 @@ const Checkout = ({ cartItems = [], grandTotal = 0, onConfirmOrder }) => {
 
   const sectionStyle = { marginBottom: 25 };
   const headingStyle = { color: '#204229', marginBottom: 10 };
-  const inputStyle = {
-    width: '100%',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-    border: '1px solid #ccc'
-  };
-  const buttonStyle = {
-    width: '100%',
-    padding: 12,
-    backgroundColor: '#204229',
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 600,
-    border: 'none',
-    borderRadius: 5,
-    cursor: 'pointer'
-  };
-
-  const buttonHoverStyle = {
-    backgroundColor: '#1b3b1c'
-  };
+  const inputStyle = { width: '100%', padding: 10, marginBottom: 10, borderRadius: 5, border: '1px solid #ccc' };
+  const buttonStyle = { width: '100%', padding: 12, backgroundColor: '#204229', color: 'white', fontSize: 16, fontWeight: 600, border: 'none', borderRadius: 5, cursor: 'pointer' };
+  const buttonHoverStyle = { backgroundColor: '#1b3b1c' };
 
   return (
     <div style={containerStyle}>
@@ -66,7 +99,7 @@ const Checkout = ({ cartItems = [], grandTotal = 0, onConfirmOrder }) => {
         ) : (
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {cartItems.map(item => (
-              <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
+              <li key={item._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
                 {item.name} x {item.quantity} = ₹{item.price * item.quantity}
               </li>
             ))}
@@ -104,11 +137,12 @@ const Checkout = ({ cartItems = [], grandTotal = 0, onConfirmOrder }) => {
       {/* Confirm Button */}
       <button
         style={buttonStyle}
+        disabled={loading}
         onMouseOver={e => e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor}
         onMouseOut={e => e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor}
         onClick={handleConfirm}
       >
-        Confirm Order
+        {loading ? "Placing Order..." : "Confirm Order"}
       </button>
     </div>
   );
