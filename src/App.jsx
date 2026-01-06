@@ -14,6 +14,7 @@ import MyShop from "./pages/Myshop.jsx";
 import Cart from "./pages/cart.jsx";
 import Login from "./pages/Login.jsx";
 import Checkout from "./pages/Checkout.jsx";
+import OrderDetails from "./pages/OrderDetails.jsx";
 
 // Admin pages
 import Dashboard from "./pages/admin/Dashboard.jsx";
@@ -30,27 +31,31 @@ import AdminRoute from "./routes/AdminRoute.jsx";
 export default function App() {
   const [cartItems, setCartItems] = useState([]);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem("cartItems"));
     if (savedCart) setCartItems(savedCart);
   }, []);
 
-  // Save cart to localStorage whenever cartItems changes
+  // Save cart to localStorage
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Add/update/remove items in cart
+  // Add / update quantity (used in BuyPage)
   const onUpdateQuantity = (product, delta) => {
     setCartItems((prev) => {
       const existing = prev.find((item) => item._id === product._id);
 
       if (existing) {
         const updatedQty = existing.quantity + delta;
-        if (updatedQty <= 0) return prev.filter(item => item._id !== product._id);
-        return prev.map(item =>
-          item._id === product._id ? { ...item, quantity: updatedQty } : item
+        if (updatedQty <= 0) {
+          return prev.filter((item) => item._id !== product._id);
+        }
+        return prev.map((item) =>
+          item._id === product._id
+            ? { ...item, quantity: updatedQty }
+            : item
         );
       } else if (delta > 0) {
         return [...prev, { ...product, quantity: delta }];
@@ -59,46 +64,97 @@ export default function App() {
     });
   };
 
-  // Optional: Update quantity directly (used by Cart page buttons)
+  // Set quantity directly (used in Cart page)
   const onSetQuantity = (id, quantity) => {
-    setCartItems(prev => {
-      if (quantity <= 0) return prev.filter(item => item._id !== id);
-      return prev.map(item => item._id === id ? { ...item, quantity } : item);
+    setCartItems((prev) => {
+      if (quantity <= 0) {
+        return prev.filter((item) => item._id !== id);
+      }
+      return prev.map((item) =>
+        item._id === id ? { ...item, quantity } : item
+      );
     });
+  };
+
+  // Clear cart after order
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem("cartItems");
   };
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Login */}
+        {/* ================= LOGIN ================= */}
         <Route path="/login" element={<Login />} />
 
-        {/* User layout */}
+        {/* ================= USER LAYOUT ================= */}
         <Route element={<UserLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<BuyPage onUpdateQuantity={onUpdateQuantity} />} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="/my-shop" element={<MyShop />} />
 
-          {/* Cart Page */}
+          <Route
+            path="/shop"
+            element={<BuyPage onUpdateQuantity={onUpdateQuantity} />}
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/my-shop"
+            element={
+              <ProtectedRoute>
+                <MyShop />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* CART */}
           <Route
             path="/cart"
             element={
               <Cart
                 cartItems={cartItems}
-                onUpdateQuantity={onSetQuantity} // Now using direct quantity
-                onProceedToPayment={(total) => alert(`Proceeding to payment ₹${total}`)}
+                onUpdateQuantity={onSetQuantity}
               />
             }
           />
 
-          <Route path="/checkout" element={<Checkout />} />
+          {/* CHECKOUT */}
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <Checkout onConfirmOrder={clearCart} />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ORDER DETAILS */}
+          <Route
+            path="/orders/:id"
+            element={
+              <ProtectedRoute>
+                <OrderDetails />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
-        {/* Admin layout */}
+        {/* ================= ADMIN LAYOUT ================= */}
         <Route
           path="/admin"
-          element={<AdminRoute><AdminLayout /></AdminRoute>}
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
@@ -109,7 +165,7 @@ export default function App() {
           <Route path="settings" element={<Settings />} />
         </Route>
 
-        {/* Fallback */}
+        {/* ================= FALLBACK ================= */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

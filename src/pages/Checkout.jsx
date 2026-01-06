@@ -1,151 +1,232 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Checkout = ({ onConfirmOrder }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get cart data passed from Cart page
   const { cartItems = [], grandTotal = 0 } = location.state || {};
 
   const [billingDetails, setBillingDetails] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
+    name: "",
+    phone: "",
+    address: "",
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [loading, setLoading] = useState(false);
+  const sellerUPI = "9876543210@upi";
 
-  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setBillingDetails({ ...billingDetails, [name]: value });
   };
 
-  // Handle confirm order
-  const handleConfirm = async () => {
-    if (cartItems.length === 0) {
-      alert("Your cart is empty!");
-      navigate("/");
+  const handleConfirmOrder = () => {
+    if (!cartItems.length) {
+      alert("Your cart is empty");
       return;
     }
 
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:5000/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}` // if auth middleware used
-        },
-        body: JSON.stringify({
-          items: cartItems.map(i => ({
-            productId: i._id,
-            name: i.name,
-            price: i.price,
-            quantity: i.quantity
-          })),
-          billingDetails,
-          paymentMethod,
-          totalAmount: grandTotal
-        })
-      });
-
-      const data = await res.json();
-      setLoading(false);
-
-      if (res.ok) {
-        alert(data.message); // "Order placed successfully"
-        onConfirmOrder();    // clear cart
-        navigate("/");       // redirect home
-      } else {
-        alert(data.message || "Something went wrong");
-      }
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-      alert("Server error, please try again");
-    }
+    onConfirmOrder();
+    navigate("/orders/ORDER123"); // UI demo
   };
-
-  // Styles
-  const containerStyle = {
-    maxWidth: 600,
-    margin: '40px auto',
-    padding: 30,
-    background: '#f5f5f5',
-    borderRadius: 10,
-    boxShadow: '0 0 15px rgba(0,0,0,0.1)',
-    fontFamily: 'Arial, sans-serif'
-  };
-
-  const sectionStyle = { marginBottom: 25 };
-  const headingStyle = { color: '#204229', marginBottom: 10 };
-  const inputStyle = { width: '100%', padding: 10, marginBottom: 10, borderRadius: 5, border: '1px solid #ccc' };
-  const buttonStyle = { width: '100%', padding: 12, backgroundColor: '#204229', color: 'white', fontSize: 16, fontWeight: 600, border: 'none', borderRadius: 5, cursor: 'pointer' };
-  const buttonHoverStyle = { backgroundColor: '#1b3b1c' };
 
   return (
-    <div style={containerStyle}>
-      <h2 style={{ textAlign: 'center', color: '#204229', marginBottom: 20 }}>Checkout</h2>
+    <div style={styles.page}>
+      <div style={styles.container}>
+        <h2 style={styles.title}>Checkout</h2>
 
-      {/* Order Summary */}
-      <section style={sectionStyle}>
-        <h3 style={headingStyle}>Order Summary</h3>
-        {cartItems.length === 0 ? (
-          <p>Your cart is empty.</p>
-        ) : (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {cartItems.map(item => (
-              <li key={item._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
-                {item.name} x {item.quantity} = ₹{item.price * item.quantity}
-              </li>
-            ))}
-          </ul>
-        )}
-        <p style={{ fontWeight: 'bold', marginTop: 10 }}>Grand Total: ₹{grandTotal}</p>
-      </section>
+        {/* ORDER SUMMARY */}
+        <div style={styles.card}>
+          <h4 style={styles.cardTitle}>Order Summary</h4>
 
-      {/* Billing Details */}
-      <section style={sectionStyle}>
-        <h3 style={headingStyle}>Billing Details</h3>
-        <input type="text" name="name" placeholder="Full Name" value={billingDetails.name} onChange={handleChange} style={inputStyle} />
-        <input type="email" name="email" placeholder="Email" value={billingDetails.email} onChange={handleChange} style={inputStyle} />
-        <input type="tel" name="phone" placeholder="Phone Number" value={billingDetails.phone} onChange={handleChange} style={inputStyle} />
-        <textarea name="address" placeholder="Delivery Address" value={billingDetails.address} onChange={handleChange} style={{ ...inputStyle, height: 80 }}></textarea>
-      </section>
+          {cartItems.map((item) => (
+            <div key={item._id} style={styles.row}>
+              <span style={styles.itemName}>
+                {item.name} × {item.quantity}
+              </span>
+              <span style={styles.price}>
+                ₹{item.price * item.quantity}
+              </span>
+            </div>
+          ))}
 
-      {/* Payment Method */}
-      <section style={sectionStyle}>
-        <h3 style={headingStyle}>Payment Method</h3>
-        <label style={{ display: 'block', marginBottom: 8, cursor: 'pointer' }}>
-          <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} />
-          Credit/Debit Card
-        </label>
-        <label style={{ display: 'block', marginBottom: 8, cursor: 'pointer' }}>
-          <input type="radio" name="payment" value="upi" checked={paymentMethod === 'upi'} onChange={() => setPaymentMethod('upi')} />
-          UPI
-        </label>
-        <label style={{ display: 'block', marginBottom: 8, cursor: 'pointer' }}>
-          <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} />
-          Cash on Delivery
-        </label>
-      </section>
+          <div style={styles.divider} />
 
-      {/* Confirm Button */}
-      <button
-        style={buttonStyle}
-        disabled={loading}
-        onMouseOver={e => e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor}
-        onMouseOut={e => e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor}
-        onClick={handleConfirm}
-      >
-        {loading ? "Placing Order..." : "Confirm Order"}
-      </button>
+          <div style={styles.totalRow}>
+            <span>Total Payable</span>
+            <span>₹{grandTotal}</span>
+          </div>
+        </div>
+
+        {/* DELIVERY DETAILS */}
+        <div style={styles.card}>
+          <h4 style={styles.cardTitle}>Delivery Details</h4>
+
+          <input
+            style={styles.input}
+            placeholder="Full name"
+            name="name"
+            onChange={handleChange}
+          />
+          <input
+            style={styles.input}
+            placeholder="Mobile number"
+            name="phone"
+            onChange={handleChange}
+          />
+          <textarea
+            style={styles.textarea}
+            placeholder="Complete delivery address"
+            name="address"
+            onChange={handleChange}
+          />
+        </div>
+
+        {/* PAYMENT */}
+        <div style={styles.card}>
+          <h4 style={styles.cardTitle}>Payment</h4>
+          <p style={styles.subText}>
+            Pay directly to the seller using UPI
+          </p>
+
+          <div style={styles.paymentBox}>
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=upi://pay?pa=${sellerUPI}`}
+              alt="UPI QR"
+              style={styles.qr}
+            />
+
+            <div>
+              <p style={styles.upiLabel}>UPI ID</p>
+              <p style={styles.upiId}>{sellerUPI}</p>
+              <p style={styles.note}>
+                Scan with GPay / PhonePe / Paytm
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CONFIRM */}
+        <button style={styles.primaryButton} onClick={handleConfirmOrder}>
+          Confirm & Place Order
+        </button>
+      </div>
     </div>
   );
+};
+
+const styles = {
+  page: {
+    background: "#f6f7f9",
+    minHeight: "100vh",
+    padding: "50px 0",
+  },
+  container: {
+    maxWidth: 520,
+    margin: "auto",
+    fontFamily: "Inter, Segoe UI, sans-serif",
+  },
+  title: {
+    textAlign: "center",
+    marginBottom: 30,
+    fontWeight: 600,
+    color: "#1f2937",
+  },
+  card: {
+    background: "#ffffff",
+    padding: 20,
+    borderRadius: 12,
+    boxShadow: "0 10px 25px rgba(0,0,0,0.06)",
+    marginBottom: 20,
+  },
+  cardTitle: {
+    marginBottom: 14,
+    fontSize: 16,
+    fontWeight: 600,
+    color: "#111827",
+  },
+  row: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    fontSize: 14,
+  },
+  itemName: {
+    color: "#374151",
+  },
+  price: {
+    fontWeight: 500,
+  },
+  divider: {
+    height: 1,
+    background: "#e5e7eb",
+    margin: "12px 0",
+  },
+  totalRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    fontWeight: 600,
+    fontSize: 16,
+  },
+  input: {
+    width: "100%",
+    padding: 12,
+    marginBottom: 10,
+    borderRadius: 8,
+    border: "1px solid #d1d5db",
+    fontSize: 14,
+  },
+  textarea: {
+    width: "100%",
+    padding: 12,
+    height: 90,
+    borderRadius: 8,
+    border: "1px solid #d1d5db",
+    fontSize: 14,
+  },
+  subText: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginBottom: 12,
+  },
+  paymentBox: {
+    display: "flex",
+    gap: 16,
+    alignItems: "center",
+    background: "#f9fafb",
+    padding: 14,
+    borderRadius: 10,
+  },
+  qr: {
+    borderRadius: 8,
+    background: "#fff",
+    padding: 4,
+  },
+  upiLabel: {
+    fontSize: 12,
+    color: "#6b7280",
+  },
+  upiId: {
+    fontWeight: 600,
+    fontSize: 14,
+  },
+  note: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginTop: 4,
+  },
+  primaryButton: {
+    width: "100%",
+    padding: 15,
+    background: "#204229",
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: 600,
+    border: "none",
+    borderRadius: 12,
+    cursor: "pointer",
+    marginTop: 10,
+  },
 };
 
 export default Checkout;
